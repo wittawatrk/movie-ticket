@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # NestJS App Service
+#  app:
+#    build:
+#      context: ../gisda/agro-api
+#      dockerfile: Dockerfile
+#    ports:
+#      - "3000:3000" # Map the container's port 3000 to the host
+#    environment:
+#      # These variables should match what your NestJS app expects
+#      DATABASE_HOST: postgres # Use the service name as the hostname
+#      DATABASE_PORT: 5432
+#      DATABASE_USER: datawowtest
+#      DATABASE_PASSWORD: datawowtest
+#      DATABASE_NAME: consert
+#      REDIS_HOST: redis # Use the service name as the hostname
+#      REDIS_PORT: 6379
+#      # ... other NestJS environment variables
+#    depends_on:
+#      postgres:
+#        condition: service_healthy # Wait for postgres to be healthy
+#      redis:
+#        condition: service_healthy # Wait for redis to be healthy
+#    restart: always
+
+  # PostgreSQL Database Service
+  postgres:
+    image: postgres:16-alpine # A light alpine version
+    container_name: nestjs_postgres_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: datawowtest
+      POSTGRES_PASSWORD: datawowtest
+      POSTGRES_DB: consert
+    volumes:
+      - pg_data:/var/lib/postgresql/data # Persist data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: always
+
+  # Redis Cache Service
+  redis:
+    image: redis:7-alpine # A light alpine version
+    container_name: nestjs_redis_cache
+    ports:
+      - "6379:6379"
+    environment:
+      # Optional: set a Redis password if needed
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - redis_data:/data # Persist data
+    restart: always
+
+volumes:
+  pg_data:
+  redis_data:
