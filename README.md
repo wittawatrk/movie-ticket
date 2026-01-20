@@ -43,4 +43,10 @@ npm run seed
     - Username: user1-user100
     - Password: PasswordDemo
 
-     
+
+## 🧪 How to Run Tests
+
+### Run all tests
+
+```bash
+docker compose exec backend npm run test
