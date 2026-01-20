@@ -6,6 +6,7 @@ import {
   Body,
   Param,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -19,10 +20,13 @@ import { RoleGuard } from '../../domain/auth/role.gaurd';
 import { CreateConcertDto } from './concerts.controller.dto';
 import { ConcertService } from '../../domain/concert/concert.service';
 
-@ApiTags('Admin - Concerts')
+@ApiTags('Concerts')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RoleGuard)
-@Controller('concerts')
+@Controller({
+  version: '1',
+  path: 'concerts',
+})
 export class ConcertsController {
   constructor(private readonly service: ConcertService) {}
 
@@ -45,10 +49,20 @@ export class ConcertsController {
   }
 
   @Get()
-  @Roles('ADMIN', 'USER')
+  @Roles('ADMIN')
   @ApiOperation({ summary: 'Get all concerts (Admin view)' })
   @ApiResponse({ status: 200, description: 'List of concerts returned' })
   findAll() {
     return this.service.findAll();
+  }
+
+  @Get('/user')
+  @Roles('USER')
+  @ApiOperation({ summary: 'Get all concerts with reservations by user' })
+  @ApiResponse({ status: 200, description: 'List of concerts returned' })
+  findAllByUser(@Req() req: any) {
+    const userId = req.user.userId;
+    console.log(req.user);
+    return this.service.findAllByUser(userId);
   }
 }

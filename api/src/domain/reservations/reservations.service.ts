@@ -22,7 +22,11 @@ export class ReservationsService {
           throw new BadRequestException('Sold out');
 
         const reserve = await tx.reservation.findMany({
-          where: { userId: userId, status: 'RESERVED' },
+          where: {
+            userId: userId,
+            status: 'RESERVED',
+            cancelledAt: null,
+          },
         });
         console.log(reserve);
         if (reserve.length > 0)
@@ -42,11 +46,21 @@ export class ReservationsService {
     );
   }
 
-  async cancel(userId: string, reservationId: string) {
+  async cancel(userId: string, concertId: string) {
     return this.prisma.$transaction(async (tx) => {
+      const reserve = await tx.reservation.findFirst({
+        where: {
+          userId: userId,
+          concertId: concertId,
+          status: 'RESERVED',
+          cancelledAt: null,
+        },
+      });
+      if (!reserve)
+        throw new BadRequestException('Reservation Not Found or Cancelled');
       const reservation = await tx.reservation.update({
-        where: { id: reservationId },
-        data: { status: 'CANCELLED', cancelledAt: new Date() },
+        where: { id: reserve.id },
+        data: { cancelledAt: new Date() },
       });
 
       await tx.concert.update({
@@ -54,14 +68,16 @@ export class ReservationsService {
         data: { reservedSeats: { decrement: 1 } },
       });
 
-      return reservation;
+      return tx.reservation.create({
+        data: { userId, concertId: reservation.concertId, status: 'CANCELLED' },
+      });
     });
   }
 
   myHistory(userId: string) {
     return this.prisma.reservation.findMany({
       where: { userId },
-      include: { concert: true },
+      include: { concert: true, user: true },
     });
   }
 

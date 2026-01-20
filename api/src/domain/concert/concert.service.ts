@@ -15,6 +15,28 @@ export class ConcertService {
   }
 
   findAll() {
-    return this.prisma.concert.findMany();
+    return this.prisma.concert.findMany({});
+  }
+
+  findAllByUser(userId: string) {
+    console.log(userId)
+    return this.prisma.concert.findMany({
+      where: {
+        reservations: {
+          some: {
+            userId,
+            deletedAt: null,
+          },
+        },
+      },
+      include: {
+        reservations: {
+          where: {
+            userId,
+            deletedAt: null,
+          },
+        },
+      },
+    });
   }
 }

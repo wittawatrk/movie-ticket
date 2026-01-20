@@ -23,7 +23,7 @@ import { ReserveSeatDto } from './reservations.controller.dto';
 @ApiTags('Reservations')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RoleGuard)
-@Controller('reservations')
+@Controller({ path: 'reservations', version: '1' })
 export class ReservationsController {
   constructor(private readonly service: ReservationsService) {}
 
@@ -35,7 +35,6 @@ export class ReservationsController {
   @ApiResponse({ status: 201, description: 'Seat reserved successfully' })
   @ApiResponse({ status: 400, description: 'Sold out or already reserved' })
   reserve(@Req() req, @Body() dto: ReserveSeatDto) {
-    console.log(req.user);
     return this.service.reserve(req.user.userId, dto.concertId);
   }
 
@@ -43,8 +42,8 @@ export class ReservationsController {
   @Roles('USER')
   @ApiOperation({ summary: 'Cancel reservation' })
   @ApiResponse({ status: 200, description: 'Reservation cancelled' })
-  cancel(@Req() req, @Param('id') reservationId: string) {
-    return this.service.cancel(req.user.userId, reservationId);
+  cancel(@Req() req, @Param('id') concertId: string) {
+    return this.service.cancel(req.user.userId, concertId);
   }
 
   @Get('me')

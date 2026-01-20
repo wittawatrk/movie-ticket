@@ -1,10 +1,12 @@
-import { Card, Button } from '@mui/material';
+import { Card, Button, Typography, Divider } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PeopleIcon from '@mui/icons-material/People';
 import { useEffect, useState } from 'react';
-import { getConserts } from '../../services/admin.service';
+import { createConcert, getConserts } from '../../services/admin.service';
 import { Concert } from './model';
 import CreateConcert from './form';
+import { useSnackbar } from '../../components/snackbar';
+import { ConcertCard } from '@/components/admin/concertCard';
 
 export default function Dashboard() {
   const [tab, setTab] = useState<'overview' | 'create'>('overview');
@@ -12,37 +14,35 @@ export default function Dashboard() {
   const [totalSeat, setTotalSeat] = useState<number>(0);
   const [totalReserved, setTotalReserved] = useState<number>(0);
   const [totalCancelled, setTotalCancelled] = useState<number>(0);
+  const { success, error } = useSnackbar();
+  const fetchData = async () => {
+    const concertList: Concert[] = await getConserts();
+    if (!concertList?.length) return;
+
+    setConcertsList(concertList);
+
+    const seatSum = concertList.reduce((sum, c) => sum + c.totalSeats, 0);
+    const reservedSum = concertList.reduce(
+      (sum, c) => sum + c.reservedSeats,
+      0,
+    );
+    const cancelledSum = concertList.reduce(
+      (sum, c) => sum + (c.totalSeats - c.reservedSeats),
+      0,
+    );
+
+    setTotalSeat(seatSum);
+    setTotalReserved(reservedSum);
+    setTotalCancelled(cancelledSum);
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      const concertList = await getConserts();
-
-      if (!concertList?.length) return;
-      setConcertsList(concertList);
-      const seatSum = concertsList.reduce((sum, c) => sum + c.totalSeats, 0);
-      const reservedSum = concertsList.reduce(
-        (sum, c) => sum + c.reservedSeats,
-        0,
-      );
-
-      // ถ้า cancelled = totalSeats - reservedSeats
-      const cancelledSum = concertsList.reduce(
-        (sum, c) => sum + (c.totalSeats - c.reservedSeats),
-        0,
-      );
-      setTotalSeat(seatSum);
-      setTotalReserved(reservedSum);
-      setTotalCancelled(cancelledSum);
-
-      console.log(concertList);
-      console.log(concertsList);
-    };
     fetchData();
   }, []);
 
   return (
     <div className="space-y-6">
-      {/* Stat cards */}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
           title="Total of seats"
@@ -53,7 +53,7 @@ export default function Dashboard() {
         <StatCard title="Cancel" value={totalCancelled} color="bg-[#E84E4E]" />
       </div>
 
-      {/* Tabs */}
+
       <div className="flex gap-6 text-sm border-b">
         <button
           onClick={() => setTab('overview')}
@@ -78,20 +78,22 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Tab Content */}
+
       {tab === 'overview' && (
         <>
           {concertsList.map((concert) => (
             <ConcertCard
-              key={concert.id}
+              id={concert.id}
               title={concert.name}
               seats={concert.totalSeats}
+              description={concert.description}
+              onDeleted={fetchData}
             />
           ))}
         </>
       )}
 
-      {tab === 'create' && <CreateConcert />}
+      {tab === 'create' && <CreateConcert onCreated={fetchData} />}
     </div>
   );
 }
@@ -110,29 +112,5 @@ function StatCard({
       <p className="text-sm">{title}</p>
       <p className="text-3xl font-bold mt-2">{value}</p>
     </div>
-  );
-}
-
-function ConcertCard({ title, seats }: { title: string; seats: number }) {
-  return (
-    <Card className="p-4 mb-4">
-      <h3 className="text-blue-600 font-semibold mb-2">{title}</h3>
-      <p className="text-sm text-gray-600 mb-4">
-        Lorem ipsum dolor sit amet consectetur. Elit purus nam gravida...
-      </p>
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-1 text-sm text-gray-500">
-          <PeopleIcon fontSize="small" /> {seats}
-        </div>
-        <Button
-          variant="contained"
-          color="error"
-          size="small"
-          startIcon={<DeleteIcon />}
-        >
-          Delete
-        </Button>
-      </div>
-    </Card>
   );
 }

@@ -12,17 +12,17 @@ export default function GlobalLayout({
   requireAdmin?: boolean;
   guestOnly?: boolean;
 }) {
+
   const content = (
     <div className="flex min-h-screen bg-gray-100">
       {!guestOnly && <Sidebar />}
       <main
-        className={`flex-1 p-4 md:p-6 ${!guestOnly ? 'md:ml-[240px]' : ''}`}
+        className={`flex-1 p-4 md:p-6 mt-10 md:mt-0 ${!guestOnly ? 'md:ml-[240px]' : ''}`}
       >
         {children}
       </main>
     </div>
   );
-
   if (guestOnly) {
     return <GuestGuard>{children}</GuestGuard>;
   }
@@ -34,6 +34,6 @@ export default function GlobalLayout({
       </AuthGuard>
     );
   }
-
+  console.log(requireAdmin)
   return <AuthGuard>{content}</AuthGuard>;
 }

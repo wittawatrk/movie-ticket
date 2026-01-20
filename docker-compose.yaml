@@ -1,0 +1,39 @@
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: concert_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./api
+    container_name: nest-backend
+    command: sh -c "npx prisma generate && npx prisma migrate deploy && npm run build && node dist/src/main"
+    environment:
+      DATABASE_URL: postgresql://admin:admin@postgres:5432/concert_db
+      JWT_SECRET: secret123
+    depends_on:
+      - postgres
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build: ./webpage
+    container_name: next-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

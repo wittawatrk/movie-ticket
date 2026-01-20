@@ -5,23 +5,38 @@ import {
   Typography,
   TextField,
   Button,
-  Grid
+  Grid,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { useState } from 'react';
+import { createConcert } from '@/services/admin.service';
+import { useSnackbar } from '@/components/snackbar';
 
-export default function CreateConcert() {
+type Props = {
+  onCreated: () => void;
+};
+
+export default function CreateConcert({ onCreated }: Props) {
   const [name, setName] = useState('');
   const [totalSeat, setTotalSeat] = useState<number>(0);
   const [description, setDescription] = useState('');
+  const { success, error } = useSnackbar();
 
-  const onSave = () => {
-    const payload = {
-      name,
-      totalSeats: totalSeat,
-      description,
-    };
-    console.log(payload);
+  const handleSubmit = async () => {
+    try {
+      await createConcert({
+        name,
+        description,
+        totalSeats: Number(totalSeat),
+      });
+      success('Create concert success');
+      onCreated();
+      setName('');
+      setTotalSeat(0);
+      setDescription('');
+    } catch (err: any) {
+      error(err.message);
+    }
   };
 
   return (
@@ -32,7 +47,7 @@ export default function CreateConcert() {
         </Typography>
 
         <div className="flex flex-col md:flex-row gap-4">
-          {/* Concert Name */}
+
           <div className="flex-1">
             <TextField
               fullWidth
@@ -43,7 +58,7 @@ export default function CreateConcert() {
             />
           </div>
 
-          {/* Total Seat */}
+
           <div className="w-full md:w-[200px]">
             <TextField
               fullWidth
@@ -55,7 +70,7 @@ export default function CreateConcert() {
           </div>
         </div>
 
-        {/* Description */}
+
         <div className="mt-4">
           <TextField
             fullWidth
@@ -72,7 +87,7 @@ export default function CreateConcert() {
           <Button
             variant="contained"
             startIcon={<SaveIcon />}
-            onClick={onSave}
+            onClick={handleSubmit}
           >
             Save
           </Button>
